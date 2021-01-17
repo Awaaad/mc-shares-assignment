@@ -44,7 +44,7 @@ public class McSharesApplication extends SpringBootServletInitializer {
 		).collect(Collectors.toSet());
 
 		List<UserProfile> userProfiles = Stream.of(
-				new UserProfile(1L, "m.awad.l", "1234", "Awad", "Luckhoo", 24, "test@test.com", 9999999, roleForAdmin)
+				new UserProfile(1L, "mcShares", "mcShares", "Awad", "Luckhoo", 24, "test@test.com", 9999999, roleForAdmin)
 		).collect(Collectors.toList());
 		userService.saveUsers(userProfiles);
 	}
