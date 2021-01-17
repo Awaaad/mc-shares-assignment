@@ -58,7 +58,7 @@ public class CustomerDetailServiceImplementation implements CustomerDetailServic
 
     @Override
     public CustomerDetailDto findCustomerDetailById(String customerDetailId) throws Exception {
-        var customerDetailEntity = customerDetailRepository.findById(customerDetailId).orElseThrow(null);
+        var customerDetailEntity = customerDetailRepository.findById(customerDetailId).orElse(null);
         if (Objects.nonNull(customerDetailEntity)) {
             return customerDetailMapper.mapCustomerDetailEntityToDto(customerDetailEntity);
         } else {
