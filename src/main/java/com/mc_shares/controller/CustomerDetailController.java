@@ -58,7 +58,7 @@ public class CustomerDetailController {
     }
 
     @PostMapping("save-customer-detail")
-    public ResponseEntity<String> saveCustomerDetail(@RequestBody CustomerDetailDto customerDetailDto){
+    public ResponseEntity<String> saveCustomerDetail(@RequestBody CustomerDetailDto customerDetailDto) throws Exception{
         customerDetailService.saveCustomerDetail(customerDetailDto);
         return new ResponseEntity<>("Customer detail saved successfully!", HttpStatus.OK);
     }

@@ -20,7 +20,7 @@ public interface CustomerDetailService {
 
     void editCustomerDetail(CustomerDetailDto customerDetailDto) throws Exception;
 
-    void saveCustomerDetail(CustomerDetailDto customerDetailDto);
+    void saveCustomerDetail(CustomerDetailDto customerDetailDto) throws Exception;
 
     void upload() throws IOException;
 

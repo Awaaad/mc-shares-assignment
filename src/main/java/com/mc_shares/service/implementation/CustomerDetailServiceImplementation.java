@@ -149,11 +149,35 @@ public class CustomerDetailServiceImplementation implements CustomerDetailServic
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void saveCustomerDetail(CustomerDetailDto customerDetailDto) {
+    public void saveCustomerDetail(CustomerDetailDto customerDetailDto) throws Exception {
         var customerDetailEntity = customerDetailMapper.mapCustomerDetailDtoToEntity(customerDetailDto);
-        var savedContactDetail = contactDetailRepository.save(customerDetailEntity.getContactDetail());
-        customerDetailEntity.setContactDetail(savedContactDetail);
-        var savedCustomerDetail = customerDetailRepository.save(customerDetailEntity);
+        if (customerDetailEntity.getCustomerType().equals("Individual") && Objects.nonNull(customerDetailEntity.getDateOfBirth())) {
+            if (calculateAge(convertToLocalDateViaInstant(customerDetailEntity.getDateOfBirth()), LocalDate.now()) >= 18) {
+                if (Objects.nonNull(customerDetailEntity.getSharesDetails().getNumShares()) && customerDetailEntity.getSharesDetails().getNumShares() > 0) {
+                    if (Objects.nonNull(customerDetailEntity.getSharesDetails().getSharePrice()) && customerDetailEntity.getSharesDetails().getSharePrice() > 0D) {
+                        if (BigDecimal.valueOf(customerDetailEntity.getSharesDetails().getSharePrice()).scale() > 2) {
+                            setErrorLog(customerDetailEntity.getCustomerDetailId(), "Share price is has more than 2 decimal places");
+                            throw new Exception("Share price is has more than 2 decimal places");
+                        } else {
+                            var savedCustomerDetail = customerDetailRepository.save(customerDetailEntity);
+                        }
+                    } else {
+                        setErrorLog(customerDetailEntity.getCustomerDetailId(), "Share price is less than 0");
+                        throw new Exception("Share price is less than 0");
+                    }
+                } else {
+                    setErrorLog(customerDetailEntity.getCustomerDetailId(), "Number of shares is less than 0");
+                    throw new Exception("Number of shares is less than 0");
+                }
+
+            } else {
+                setErrorLog(customerDetailEntity.getCustomerDetailId(), "Customer Type is " + customerDetailEntity.getCustomerType() + "but age is less than 18");
+                throw new Exception("Customer Type is " + customerDetailEntity.getCustomerType() + "but age is less than 18");
+            }
+        } else {
+            setErrorLog(customerDetailEntity.getCustomerDetailId(), "Date of Birth has not been provided");
+            throw new Exception("Date of Birth has not been provided");
+        }
     }
 
     @Override
