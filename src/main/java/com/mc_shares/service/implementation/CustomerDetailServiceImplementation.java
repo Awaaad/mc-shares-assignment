@@ -41,13 +41,11 @@ public class CustomerDetailServiceImplementation implements CustomerDetailServic
 
     private final CustomerDetailRepository customerDetailRepository;
     private final CustomerDetailMapper customerDetailMapper;
-    private final ContactDetailRepository contactDetailRepository;
     private final ErrorLogRepository errorLogRepository;
 
-    public CustomerDetailServiceImplementation(CustomerDetailRepository customerDetailRepository, CustomerDetailMapper customerDetailMapper, ContactDetailRepository contactDetailRepository, ErrorLogRepository errorLogRepository) {
+    public CustomerDetailServiceImplementation(CustomerDetailRepository customerDetailRepository, CustomerDetailMapper customerDetailMapper, ErrorLogRepository errorLogRepository) {
         this.customerDetailRepository = customerDetailRepository;
         this.customerDetailMapper = customerDetailMapper;
-        this.contactDetailRepository = contactDetailRepository;
         this.errorLogRepository = errorLogRepository;
     }
 
@@ -156,27 +154,22 @@ public class CustomerDetailServiceImplementation implements CustomerDetailServic
                 if (Objects.nonNull(customerDetailEntity.getSharesDetails().getNumShares()) && customerDetailEntity.getSharesDetails().getNumShares() > 0) {
                     if (Objects.nonNull(customerDetailEntity.getSharesDetails().getSharePrice()) && customerDetailEntity.getSharesDetails().getSharePrice() > 0D) {
                         if (BigDecimal.valueOf(customerDetailEntity.getSharesDetails().getSharePrice()).scale() > 2) {
-                            setErrorLog(customerDetailEntity.getCustomerDetailId(), "Share price is has more than 2 decimal places");
-                            throw new Exception("Share price is has more than 2 decimal places");
+                            throw new Exception("share.price.is.more.than.2.decimal.places");
                         } else {
                             var savedCustomerDetail = customerDetailRepository.save(customerDetailEntity);
                         }
                     } else {
-                        setErrorLog(customerDetailEntity.getCustomerDetailId(), "Share price is less than 0");
-                        throw new Exception("Share price is less than 0");
+                        throw new Exception("share.price.is.less.than.0");
                     }
                 } else {
-                    setErrorLog(customerDetailEntity.getCustomerDetailId(), "Number of shares is less than 0");
-                    throw new Exception("Number of shares is less than 0");
+                    throw new Exception("number.of.shares.is.less.than.0");
                 }
 
             } else {
-                setErrorLog(customerDetailEntity.getCustomerDetailId(), "Customer Type is " + customerDetailEntity.getCustomerType() + "but age is less than 18");
-                throw new Exception("Customer Type is " + customerDetailEntity.getCustomerType() + "but age is less than 18");
+                throw new Exception("customer.type.is" + customerDetailEntity.getCustomerType() + "but.age.is.less.than.18");
             }
         } else {
-            setErrorLog(customerDetailEntity.getCustomerDetailId(), "Date of Birth has not been provided");
-            throw new Exception("Date of Birth has not been provided");
+            throw new Exception("date.of.birth.has.not.been.provided");
         }
     }
 
@@ -229,7 +222,7 @@ public class CustomerDetailServiceImplementation implements CustomerDetailServic
                     if (Objects.nonNull(customerDetail.getSharesDetails().getNumShares()) && customerDetail.getSharesDetails().getNumShares() > 0) {
                         if (Objects.nonNull(customerDetail.getSharesDetails().getSharePrice()) && customerDetail.getSharesDetails().getSharePrice() > 0D) {
                             if (BigDecimal.valueOf(customerDetail.getSharesDetails().getSharePrice()).scale() > 2) {
-                                setErrorLog(customerDetail.getCustomerDetailId(), "Share price is has more than 2 decimal places");
+                                setErrorLog(customerDetail.getCustomerDetailId(), "Share price is more than 2 decimal places");
                             } else {
                                 newListOfCustomerDetail.add(customerDetail);
                             }
