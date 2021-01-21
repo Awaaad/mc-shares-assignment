@@ -1,6 +1,5 @@
 package com.mc_shares.controller;
 
-import com.mc_shares.dto.CustomerDetailDto;
 import com.mc_shares.dto.ErrorLogDto;
 import com.mc_shares.service.ErrorLogService;
 import org.springframework.http.HttpStatus;

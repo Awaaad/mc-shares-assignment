@@ -8,7 +8,6 @@ import com.mc_shares.entity.DocXml;
 import com.mc_shares.entity.ErrorLog;
 import com.mc_shares.entity.QCustomerDetail;
 import com.mc_shares.mapper.CustomerDetailMapper;
-import com.mc_shares.repository.ContactDetailRepository;
 import com.mc_shares.repository.CustomerDetailRepository;
 import com.mc_shares.repository.ErrorLogRepository;
 import com.mc_shares.service.CustomerDetailService;
@@ -18,13 +17,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -90,7 +87,7 @@ public class CustomerDetailServiceImplementation implements CustomerDetailServic
         Sort sort = Sort.by("ASC".equals(sortOrder) ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
         PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sort);
         BooleanBuilder predicate = buildProductPredicate(name);
-        Page<CustomerDetail> customerDetails = customerDetailRepository.findAll(predicate,pageRequest);
+        Page<CustomerDetail> customerDetails = customerDetailRepository.findAll(predicate, pageRequest);
         List<CustomerDetailDto> customerDetailDtos = customerDetails.stream().map(customerDetailMapper::mapCustomerDetailEntityToDto).collect(Collectors.toList());
         var customerDetailListDto = new CustomerDetailListDto();
         customerDetailListDto.setCustomerDetailsDto(customerDetailDtos);
@@ -102,7 +99,7 @@ public class CustomerDetailServiceImplementation implements CustomerDetailServic
     private BooleanBuilder buildProductPredicate(String name) {
         var qCustomerDetail = QCustomerDetail.customerDetail;
         BooleanBuilder booleanBuilder = new BooleanBuilder();
-        if(!name.equals("")) {
+        if (!name.equals("")) {
             booleanBuilder.and(qCustomerDetail.contactDetail.contactName.toLowerCase().contains(name.toLowerCase()));
         }
         return booleanBuilder;
@@ -149,27 +146,34 @@ public class CustomerDetailServiceImplementation implements CustomerDetailServic
     @Transactional(rollbackFor = Exception.class)
     public void saveCustomerDetail(CustomerDetailDto customerDetailDto) throws Exception {
         var customerDetailEntity = customerDetailMapper.mapCustomerDetailDtoToEntity(customerDetailDto);
-        if (customerDetailEntity.getCustomerType().equals("Individual") && Objects.nonNull(customerDetailEntity.getDateOfBirth())) {
-            if (calculateAge(convertToLocalDateViaInstant(customerDetailEntity.getDateOfBirth()), LocalDate.now()) >= 18) {
-                if (Objects.nonNull(customerDetailEntity.getSharesDetails().getNumShares()) && customerDetailEntity.getSharesDetails().getNumShares() > 0) {
-                    if (Objects.nonNull(customerDetailEntity.getSharesDetails().getSharePrice()) && customerDetailEntity.getSharesDetails().getSharePrice() > 0D) {
-                        if (BigDecimal.valueOf(customerDetailEntity.getSharesDetails().getSharePrice()).scale() > 2) {
-                            throw new Exception("share.price.is.more.than.2.decimal.places");
-                        } else {
-                            var savedCustomerDetail = customerDetailRepository.save(customerDetailEntity);
-                        }
-                    } else {
-                        throw new Exception("share.price.is.less.than.0");
-                    }
+        if (customerDetailEntity.getCustomerType().equals("Individual")) {
+            if (Objects.nonNull(customerDetailEntity.getDateOfBirth())) {
+                if (calculateAge(convertToLocalDateViaInstant(customerDetailEntity.getDateOfBirth()), LocalDate.now()) >= 18) {
+                    SharedExceptionValidation(customerDetailEntity);
                 } else {
-                    throw new Exception("number.of.shares.is.less.than.0");
+                    throw new Exception("customer.type.is" + customerDetailEntity.getCustomerType() + "but.age.is.less.than.18");
                 }
-
             } else {
-                throw new Exception("customer.type.is" + customerDetailEntity.getCustomerType() + "but.age.is.less.than.18");
+                throw new Exception("date.of.birth.has.not.been.provided");
+            }
+        } else if (customerDetailEntity.getCustomerType().equals("Corporate")) {
+            SharedExceptionValidation(customerDetailEntity);
+        }
+    }
+
+    private void SharedExceptionValidation(CustomerDetail customerDetailEntity) throws Exception {
+        if (Objects.nonNull(customerDetailEntity.getSharesDetails().getNumShares()) && customerDetailEntity.getSharesDetails().getNumShares() > 0) {
+            if (Objects.nonNull(customerDetailEntity.getSharesDetails().getSharePrice()) && customerDetailEntity.getSharesDetails().getSharePrice() > 0D) {
+                if (BigDecimal.valueOf(customerDetailEntity.getSharesDetails().getSharePrice()).scale() > 2) {
+                    throw new Exception("share.price.is.more.than.2.decimal.places");
+                } else {
+                    customerDetailRepository.save(customerDetailEntity);
+                }
+            } else {
+                throw new Exception("share.price.is.less.than.0");
             }
         } else {
-            throw new Exception("date.of.birth.has.not.been.provided");
+            throw new Exception("number.of.shares.is.less.than.0");
         }
     }
 
@@ -181,10 +185,6 @@ public class CustomerDetailServiceImplementation implements CustomerDetailServic
             Unmarshaller un = context.createUnmarshaller();
             DocXml docXml = (DocXml) un.unmarshal(new File("McShares_2018.xml"));
             List<CustomerDetail> customerDetails = docXml.getCustomerDetails();
-            for (CustomerDetail customerDetail: customerDetails) {
-                System.out.println("DOB: " + customerDetail.getDateOfBirth());
-                System.out.println("Date Incorp:" + customerDetail.getDateIncorp());
-            }
             saveAllCustomerDetail(customerDetails);
         } catch (JAXBException e) {
             ErrorLog errorLog = new ErrorLog();
@@ -201,10 +201,6 @@ public class CustomerDetailServiceImplementation implements CustomerDetailServic
             Unmarshaller un = context.createUnmarshaller();
             DocXml docXml = (DocXml) un.unmarshal(file);
             List<CustomerDetail> customerDetails = docXml.getCustomerDetails();
-            for (CustomerDetail customerDetail: customerDetails) {
-                System.out.println("DOB: " + customerDetail.getDateOfBirth());
-                System.out.println("Date Incorp:" + customerDetail.getDateIncorp());
-            }
             saveAllCustomerDetail(customerDetails);
         } catch (JAXBException e) {
             ErrorLog errorLog = new ErrorLog();
@@ -216,32 +212,43 @@ public class CustomerDetailServiceImplementation implements CustomerDetailServic
 
     private void saveAllCustomerDetail(List<CustomerDetail> customerDetails) {
         List<CustomerDetail> newListOfCustomerDetail = new ArrayList<CustomerDetail>();
-        customerDetails.forEach(customerDetail -> {
-            if (customerDetail.getCustomerType().equals("Individual") && Objects.nonNull(customerDetail.getDateOfBirth())) {
-                if (calculateAge(convertToLocalDateViaInstant(customerDetail.getDateOfBirth()), LocalDate.now()) >= 18) {
-                    if (Objects.nonNull(customerDetail.getSharesDetails().getNumShares()) && customerDetail.getSharesDetails().getNumShares() > 0) {
-                        if (Objects.nonNull(customerDetail.getSharesDetails().getSharePrice()) && customerDetail.getSharesDetails().getSharePrice() > 0D) {
-                            if (BigDecimal.valueOf(customerDetail.getSharesDetails().getSharePrice()).scale() > 2) {
-                                setErrorLog(customerDetail.getCustomerDetailId(), "Share price is more than 2 decimal places");
-                            } else {
-                                newListOfCustomerDetail.add(customerDetail);
-                            }
-                        } else {
-                            setErrorLog(customerDetail.getCustomerDetailId(), "Share price is less than 0");
-                        }
-                    } else {
-                        setErrorLog(customerDetail.getCustomerDetailId(), "Number of shares is less than 0");
-                    }
 
+        customerDetails.forEach(customerDetail -> {
+            if (customerDetail.getCustomerType().equals("Individual")) {
+                if (Objects.nonNull(customerDetail.getDateOfBirth())) {
+                    if (calculateAge(convertToLocalDateViaInstant(customerDetail.getDateOfBirth()), LocalDate.now()) >= 18) {
+                        SharedErrorLogValidation(newListOfCustomerDetail, customerDetail);
+
+                    } else {
+                        setErrorLog(customerDetail.getCustomerDetailId(), "Customer Type is " + customerDetail.getCustomerType() + "but age is less than 18");
+                    }
                 } else {
-                    setErrorLog(customerDetail.getCustomerDetailId(), "Customer Type is " + customerDetail.getCustomerType() + "but age is less than 18");
+                    setErrorLog(customerDetail.getCustomerDetailId(), "Date of Birth has not been provided");
                 }
-            } else {
-                setErrorLog(customerDetail.getCustomerDetailId(), "Date of Birth has not been provided");
+
+            } else if (customerDetail.getCustomerType().equals("Corporate")) {
+                SharedErrorLogValidation(newListOfCustomerDetail, customerDetail);
             }
         });
-        customerDetailRepository.saveAll(newListOfCustomerDetail);
 
+
+        customerDetailRepository.saveAll(newListOfCustomerDetail);
+    }
+
+    private void SharedErrorLogValidation(List<CustomerDetail> newListOfCustomerDetail, CustomerDetail customerDetail) {
+        if (Objects.nonNull(customerDetail.getSharesDetails().getNumShares()) && customerDetail.getSharesDetails().getNumShares() > 0) {
+            if (Objects.nonNull(customerDetail.getSharesDetails().getSharePrice()) && customerDetail.getSharesDetails().getSharePrice() > 0D) {
+                if (BigDecimal.valueOf(customerDetail.getSharesDetails().getSharePrice()).scale() > 2) {
+                    setErrorLog(customerDetail.getCustomerDetailId(), "Share price is more than 2 decimal places");
+                } else {
+                    newListOfCustomerDetail.add(customerDetail);
+                }
+            } else {
+                setErrorLog(customerDetail.getCustomerDetailId(), "Share price is less than 0");
+            }
+        } else {
+            setErrorLog(customerDetail.getCustomerDetailId(), "Number of shares is less than 0");
+        }
     }
 
     private int calculateAge(LocalDate birthDate, LocalDate currentDate) {

@@ -20,17 +20,20 @@ com\mc_shares\entity\QMailingAddress.class
 com\mc_shares\mapper\ContactDetailMapper.class
 com\mc_shares\service\implementation\RoleServiceImplementation.class
 com\mc_shares\controller\UserController.class
+com\mc_shares\dto\ErrorLogDto.class
 com\mc_shares\dto\LoginParamDto.class
 com\mc_shares\repository\RoleRepository.class
 com\mc_shares\mapper\SharesDetailMapperImpl.class
 com\mc_shares\controller\ContactDetailController.class
 com\mc_shares\controller\CustomerDetailController.class
 com\mc_shares\dto\UserDto.class
+com\mc_shares\controller\ErrorLogController.class
 com\mc_shares\mapper\CustomerDetailMapperImpl.class
 com\mc_shares\entity\DocXml.class
 com\mc_shares\service\RoleService.class
 com\mc_shares\mapper\ContactDetailMapperImpl.class
 com\mc_shares\dto\CustomerDetailedInformationDto.class
+com\mc_shares\mapper\ErrorLogMapper.class
 com\mc_shares\service\implementation\SharesDetailServiceImplementation.class
 com\mc_shares\entity\CustomerDetail.class
 com\mc_shares\dto\DownloadDto.class
@@ -47,6 +50,7 @@ com\mc_shares\repository\UserRepository.class
 com\mc_shares\dto\CustomerDetailDto.class
 com\mc_shares\dto\ContactDetailDto.class
 com\mc_shares\mapper\MailingAddressMapper.class
+com\mc_shares\service\ErrorLogService.class
 com\mc_shares\repository\ErrorLogRepository.class
 com\mc_shares\security\JwtUtil.class
 com\mc_shares\entity\MailingAddress.class
@@ -56,6 +60,7 @@ com\mc_shares\mapper\SharesDetailMapper.class
 com\mc_shares\service\implementation\UserServiceImplementation.class
 com\mc_shares\dto\AuthenticatedUserDto.class
 com\mc_shares\entity\ErrorLog.class
+com\mc_shares\mapper\ErrorLogMapperImpl.class
 com\mc_shares\dto\DownloadDto$DownloadDtoBuilder.class
 com\mc_shares\dto\RoleDto.class
 com\mc_shares\security\SecurityConfiguration.class
@@ -66,6 +71,7 @@ com\mc_shares\service\ContactDetailService.class
 com\mc_shares\mapper\UserMapper.class
 com\mc_shares\service\implementation\UserRoleDetailsServiceImplementation.class
 com\mc_shares\repository\CustomerDetailRepository.class
+com\mc_shares\service\implementation\ErrorLogServiceImplementation.class
 com\mc_shares\service\CustomerDetailService.class
 com\mc_shares\controller\MaillingAddressController.class
 com\mc_shares\mapper\CustomerDetailMapper.class
